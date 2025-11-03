@@ -1,0 +1,104 @@
+version: "3.8"
+
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: erm_app_prod
+    working_dir: /var/www/laravel
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    depends_on:
+      - redis
+      - mongo
+    networks:
+      - erm_net
+
+  soketi:
+    image: quay.io/soketi/soketi:latest-16-alpine
+    container_name: erm_soketi_prod
+    environment:
+      - DEFAULT_APP_ID=app-id
+      - DEFAULT_APP_KEY=app-key
+      - DEFAULT_APP_SECRET=app-secret
+      - PORT=6001
+      - METRICS_PORT=9601
+    ports:
+      - "6001:6001"
+      - "9601:9601"
+    networks:
+      - erm_net
+
+  php-worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: erm_php_worker_prod
+    working_dir: /var/www/laravel
+    command: ["sh","-c","php artisan migrate --force || true; php artisan queue:work --sleep=3 --tries=3"]
+    depends_on:
+      - app
+      - redis
+      - mongo
+    networks:
+      - erm_net
+
+  subscriber:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: erm_subscriber_prod
+    working_dir: /var/www/laravel
+    command: ["php","artisan","mcu:subscribe"]
+    depends_on:
+      - redis
+      - app
+      - mongo
+    networks:
+      - erm_net
+
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: erm_nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+      - php-worker
+    networks:
+      - erm_net
+
+  redis:
+    image: redis:8.2-alpine
+    container_name: erm_redis_prod
+    networks:
+      - erm_net
+
+  mongo:
+    image: mongo:8.2
+    container_name: erm_mongo_prod
+    networks:
+      - erm_net
+
+  node-bridge:
+    build:
+      context: ./node-bridge
+      dockerfile: Dockerfile
+    container_name: erm_node_bridge_prod
+    command: ["node","dist/index.js"]
+    ports:
+      - "9000:9000"
+    depends_on:
+      - redis
+    networks:
+      - erm_net
+
+networks:
+  erm_net:
+    driver: bridge

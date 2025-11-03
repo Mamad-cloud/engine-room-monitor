@@ -1,0 +1,10 @@
+/laravel/vendor
+/laravel/node_modules
+/laravel/.env
+/laravel/storage/*.key
+/laravel/storage/logs/*
+/node-bridge/node_modules
+/node-bridge/dist
+.DS_Store
+.env.local
+**/.env
