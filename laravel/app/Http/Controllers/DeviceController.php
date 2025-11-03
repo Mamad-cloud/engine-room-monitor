@@ -20,30 +20,31 @@ class DeviceController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        \Log::info('hi');
+        // dd($request->all());
         
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'device_id' => 'nullable|string|max:255',
-        ]);
+        // $data = $request->validate([
+        //     'name' => 'required|string|max:255',
+        //     'device_id' => 'nullable|string|max:255',
+        // ]);
 
 
-        $device = new Device();
-        $device->name = $data['name'];
-        if (!empty($data['device_id'])) {
-            $device->device_id = $data['device_id'];
-        }
-        $device->save();
+        // $device = new Device();
+        // $device->name = $data['name'];
+        // if (!empty($data['device_id'])) {
+        //     $device->device_id = $data['device_id'];
+        // }
+        // $device->save();
 
-        // Optionally broadcast that a new device exists
-        broadcast(new \App\Events\DeviceRegistered($device))->toOthers();
+        // // Optionally broadcast that a new device exists
+        // broadcast(new \App\Events\DeviceRegistered($device))->toOthers();
 
-        // if ajax request return json
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json($device, 201);
-        }
+        // // if ajax request return json
+        // if ($request->wantsJson() || $request->ajax()) {
+        //     return response()->json($device, 201);
+        // }
 
-        return redirect()->route('devices.index')->with('status', 'Device created');
+        // return redirect()->route('devices.index')->with('status', 'Device created');
     }
 
     public function sendCommand(Request $request, Device $device): JsonResponse

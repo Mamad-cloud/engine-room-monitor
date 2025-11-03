@@ -71,7 +71,12 @@
 
 <script>
   // CSRF token for fetch
-//   const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  //   const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  fetch('/api/hello')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
   const CSRF_TOKEN = '{{ csrf_token() }}';
 
   // Pusher/Soketi configuration (from env via blade)
