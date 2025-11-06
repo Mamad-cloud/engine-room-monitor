@@ -108,6 +108,9 @@ services:
     networks:
       - erm_net
 
+volumes:
+  mongo-data:
+
 networks:
   erm_net:
     driver: bridge
