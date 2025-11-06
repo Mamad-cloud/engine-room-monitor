@@ -27,11 +27,11 @@ COPY ./laravel /var/www/laravel
 # optionally install composer dependencies during build
 RUN if [ "${INSTALL_COMPOSER}" = "true" ]; then \
       cd /var/www/laravel && \
-      composer install --no-dev --prefer-dist --no-progress --no-interaction --no-scripts || true; \
+      composer install \
     fi
 
 # ensure storage & cache ownership
-RUN chown -R www-data:www-data /var/www/laravel || true
+RUN chown -R www-data:www-data /var/www/laravel
 
 EXPOSE 9000
 CMD ["php-fpm"]
