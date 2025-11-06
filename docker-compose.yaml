@@ -45,9 +45,12 @@ services:
       - ./laravel:/var/www/laravel
     command: ["sh","-c","php artisan migrate --force || true; php artisan queue:work --sleep=3 --tries=3"]
     depends_on:
-      - app
-      - redis
-      - mongo
+      redis:
+        condition: service_started
+      mongo:
+        condition: service_healthy
+      app:
+        condition: service_started
     networks:
       - erm_net
 
@@ -91,19 +94,22 @@ services:
   mongo:
     image: mongo:8.2
     container_name: erm_mongo
-
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=A@a123_321@!
-      - MONGO_INITDB_DATABASE=mcu_db    
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-      - ./docker/mongo-initdb:/docker-entrypoint-initdb.d:ro
+      - ./docker/mongo/create-app-user.js:/docker-entrypoint-initdb.d/create-app-user.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootsecret123
+      MONGO_INITDB_DATABASE: mcu_db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - erm_net
-
   node-bridge:
     build:
       context: ./node-bridge

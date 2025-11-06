@@ -82,16 +82,21 @@ services:
 
   mongo:
     image: mongo:8.2
-    container_name: erm_mongo_prod
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=A@a123_321@!
-      - MONGO_INITDB_DATABASE=mcu_db    
+    container_name: erm_mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-      - ./docker/mongo-initdb:/docker-entrypoint-initdb.d:ro
+      - ./docker/mongo/create-app-user.js:/docker-entrypoint-initdb.d/create-app-user.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootsecret123
+      MONGO_INITDB_DATABASE: mcu_db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - erm_net
 
