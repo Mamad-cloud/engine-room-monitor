@@ -31,7 +31,7 @@ RUN if [ "${INSTALL_COMPOSER}" = "true" ]; then \
     fi
 
 # ensure storage & cache ownership
-RUN chown -R www-data:www-data /var/www/laravel || true
+RUN chown -R www-data:www-data /var/www/laravel/storage || true
 
 EXPOSE 9000
 CMD ["php-fpm"]

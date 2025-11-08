@@ -269,12 +269,13 @@
       try {
         // disable pusher console logs in prod
         if (window.Pusher) {
-          window.Pusher.logToConsole = false;
+          window.Pusher.logToConsole = true;
         }
 
         const pusher = new Pusher(PUSHER_KEY, {
           cluster: 'mt1',
-          wsHost: PUSHER_HOST,
+          // wsHost: PUSHER_HOST,
+          wsHost: window.location.hostname,
           wsPort: PUSHER_PORT,
           wssPort: PUSHER_PORT,
           forceTLS: (PUSHER_SCHEME === 'https'),
