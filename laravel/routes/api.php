@@ -2,16 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Redis;
+use App\Http\Controllers\DeviceController;
 
-// Route::post('/devices/{id}/commands', function (Request $req, $id) {
-//     $body = $req->all();
-//     $cmd = array_merge(['device_id' => $id, 'req_id' => uniqid()], $body);
-//     Redis::publish('mcu.commands', json_encode($cmd));
-//     return response()->json(['ok' => true, 'published' => $cmd]);
-// });
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
+// Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
 
 Route::get('/hello', function(Request $req) {
-    return response()->json(['Hi!'], 200);
+    return response()->json(['hi']);
 });

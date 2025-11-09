@@ -7,3 +7,4 @@ Route::get('/', [DeviceController::class, 'index'])->name('devices.index');
 Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
 
 Route::post('/devices/{device}/commands', [DeviceController::class, 'sendCommand'])->name('devices.commands');
+

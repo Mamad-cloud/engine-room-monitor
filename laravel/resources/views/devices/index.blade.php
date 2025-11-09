@@ -123,7 +123,7 @@
   </div>
 
   <!-- include Pusher JS (so browser has `Pusher`) -->
-  <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+  <!-- <script src="https://js.pusher.com/7.2/pusher.min.js"></script> -->
 
   <script>
     // quick / helpful debug endpoint call (optional)
@@ -136,6 +136,7 @@
     const PUSHER_HOST = "{{ env('PUSHER_HOST', 'soketi') }}".replace(/^https?:\/\//, '');
     const PUSHER_PORT = {{ (int) env('PUSHER_PORT', 6001) }};
     const PUSHER_SCHEME = "{{ env('PUSHER_SCHEME', 'http') }}";
+    console.log(PUSHER_KEY);
 
     // map device_id -> array messages (for per-card compact view)
     const messages = {};
@@ -283,6 +284,7 @@
           disableStats: true,
           encrypted: (PUSHER_SCHEME === 'https'),
         });
+        console.log(pusher);
 
         setStatus('connected');
 

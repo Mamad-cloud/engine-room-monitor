@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
+      dockerfile: docker/apache/Dockerfile
     container_name: erm_app
     working_dir: /var/www/laravel
     volumes:
@@ -19,7 +19,6 @@ services:
       - mongo
     networks:
       - erm_net
-
   soketi:
     image: quay.io/soketi/soketi:latest-16-alpine
     container_name: erm_soketi
