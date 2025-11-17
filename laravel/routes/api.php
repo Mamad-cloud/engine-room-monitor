@@ -8,8 +8,10 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
 
 Route::get('/hello', function(Request $req) {
     return response()->json(['hi']);
 });
+
+Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
+Route::post('/devices/{device}/commands', [DeviceController::class, 'sendCommand'])->name('devices.commands');

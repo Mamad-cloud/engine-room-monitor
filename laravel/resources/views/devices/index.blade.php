@@ -241,7 +241,7 @@
       const command = input.value.trim();
       if (!command) return alert('command required');
 
-      const url = `/devices/${deviceDbId}/commands`;
+      const url = `/api/devices/${deviceDbId}/commands`;
       const resp = await fetch(url, {
         method: 'POST',
         headers: {
