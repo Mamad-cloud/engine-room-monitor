@@ -12,7 +12,7 @@ class Device extends Model
 
     protected $connection = 'mongodb';
     protected $collection = 'devices';
-    protected $fillable = ['device_id','name','token','meta'];
+    protected $fillable = ['device_id','name','token','meta', 'engine_room_id'];
     public $incrementing = false;
 
     protected static function booted()
@@ -26,4 +26,10 @@ class Device extends Model
             }
         });
     }
+
+
+    public function engine_room() 
+    {
+        return $this->belongsTo(EngineRoom::class, 'engine_room_id', 'id');
+    } 
 }

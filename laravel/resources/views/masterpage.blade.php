@@ -45,6 +45,16 @@
                             <a href="{{ route('mainpage') }}">داشبورد</a>
                         </div>
 
+                        <div class="sidebar-item-container sidebar-link-active">
+                            <i class="bi bi-people fs-4 me-2"></i>
+                            <a href="{{ route('users') }}">کاربران</a>
+                        </div>
+
+                        <div class="sidebar-item-container sidebar-link-active">
+                            <i class="bi bi-lightning fs-4 me-2"></i>
+                            <a href="{{ route('subscriptions.index') }}">اشتراکها</a>
+                        </div>
+
                         <div class="sidebar-item-container">
                             <i class="bi bi-graph-up fs-4 me-2"></i>
                             <a href="{{ route('liveMonitoring') }}">مانیتورینگ زنده</a>
