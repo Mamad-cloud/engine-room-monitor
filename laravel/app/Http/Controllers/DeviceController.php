@@ -12,42 +12,60 @@ use Illuminate\Http\JsonResponse;
 
 class DeviceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Load devices from mongodb
-        $devices = Device::orderBy('_id', 'desc')->get();
-        $messages = SensorMessage::orderBy('ts', 'desc')->limit(50)->get();
-    
-        return view('devices.index', compact('devices', 'messages'));
+        $engineRoomId = $request->query('engine_room');
+
+        if ($engineRoomId) {
+            $devices = Device::where('engine_room_id', $engineRoomId)
+                             ->orderBy('_id', 'desc')
+                             ->get();
+        } else {
+            $devices = Device::orderBy('_id', 'desc')->get();
+        }
+
+        $deviceIds = $devices->pluck('device_id')->filter()->values()->all();
+
+        $messagesQuery = SensorMessage::orderBy('ts', 'desc');
+        if (!empty($deviceIds)) {
+            $messagesQuery->whereIn('device_id', $deviceIds);
+        } elseif ($engineRoomId) {
+            $messagesQuery->where('engine_room_id', $engineRoomId);
+        }
+        $messages = $messagesQuery->limit(50)->get();
+
+        return view('devices.index', [
+            'devices' => $devices,
+            'messages' => $messages,
+            'engine_room_id' => $engineRoomId,
+        ]);
     }
 
     public function store(Request $request)
     {
-        // \Log::info('hi');
-        // dd($request->all());
-        
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'device_id' => 'nullable|string|max:255',
+            'engine_room_id' => 'nullable|string|max:64',
         ]);
-
 
         $device = new Device();
         $device->name = $data['name'];
         if (!empty($data['device_id'])) {
             $device->device_id = $data['device_id'];
         }
+        if (!empty($data['engine_room_id'])) {
+            $device->engine_room_id = $data['engine_room_id'];
+        }
         $device->save();
 
-        // Optionally broadcast that a new device exists
         broadcast(new \App\Events\DeviceRegistered($device))->toOthers();
 
-        // if ajax request return json
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json($device, 201);
         }
 
-        return redirect()->route('devices.index')->with('status', 'Device created');
+        return redirect()->route('devices.index', ['engine_room' => $data['engine_room_id'] ?? null])->with('status', 'Device created');
     }
 
     public function sendCommand(Request $request, Device $device): JsonResponse
@@ -63,20 +81,17 @@ class DeviceController extends Controller
             'device_id' => $device->device_id,
             'command' => $data['command'],
             'meta' => $data['meta'] ?? null,
+            'engine_room_id' => $device->engine_room_id ?? null,
             'ts' => now()->toIso8601String(),
         ];
 
-        // 1) Publish to Redis for node-bridge to pick up and forward to MCU
         try {
-            // use Redis facade - this publishes to a standard Redis channel
             Redis::publish('mcu.commands', json_encode($payload));
         } catch (\Throwable $e) {
-            // Log but still let the request respond
             \Log::error('Failed to publish command to Redis', ['err' => $e->getMessage(), 'payload' => $payload]);
             return response()->json(['error' => 'Failed to publish command'], 500);
         }
 
-        // 2) Broadcast to the device channel so UI can update (instant feedback)
         broadcast(new CommandSent($payload))->toOthers();
 
         return response()->json(['ok' => true, 'cmd_id' => $cmdId]);

@@ -30,28 +30,28 @@ class SubscribeToMcu extends Command
                 // important: block forever waiting for messages
                 $r->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-                Log::info("Connected to redis for subscribe", ['host'=>$host, 'port'=>$port]);
+                Log::info("Connected to redis for subscribe", ['host' => $host, 'port' => $port]);
                 $this->info("Connected to redis for subscribe {$host}:{$port}");
 
                 // correct callback signature for phpredis: ($redis, $channel, $message)
                 $r->subscribe(['mcu.data'], function ($redisClient, $channel, $message) {
                     try {
                         // Log so docker logs show it
-                        Log::info('mcu.data received', ['channel'=>$channel, 'message'=>$message]);
+                        Log::info('mcu.data received', ['channel' => $channel, 'message' => $message]);
                         // also echo to stdout for immediate view
                         echo "[mcu.subscribe] {$channel} => {$message}\n";
 
-                        // minimal write to DB (safe catch)
+                        // minimal write to DB (safe catch) — keep original behaviour
                         try {
                             SensorMessage::create([
-                                'device_id' => 'device_id', // or extract from payload
+                                'device_id' => 'device_id', // placeholder
                                 'ts' => now()->toIso8601String(),
                                 'seq' => 'seq',
-                                'sensors' => [],     
+                                'sensors' => [],
                                 'raw' => $message,
                             ]);
                         } catch (\Throwable $e) {
-                            Log::error('Failed to save SensorMessage (initial)', ['err'=>$e->getMessage()]);
+                            Log::error('Failed to save SensorMessage (initial)', ['err' => $e->getMessage()]);
                         }
 
                         $payload = json_decode($message, true);
@@ -60,34 +60,51 @@ class SubscribeToMcu extends Command
                             return;
                         }
 
-                        // persist parsed version
+                        // Try to find device to attach engine_room_id
+                        $engineRoomId = null;
                         try {
-                            SensorMessage::create([
-                                'device_id' => $payload['device_id'],
-                                'ts' => $payload['ts'] ?? now()->toIso8601String(),
-                                'seq' => $payload['seq'] ?? null,
-                                'sensors' => $payload['sensors'] ?? [],
-                                'raw' => $payload,
-                            ]);
+                            $device = Device::where('device_id', $payload['device_id'])->first();
+                            if ($device) {
+                                $engineRoomId = $device->engine_room_id ?? null;
+                            }
                         } catch (\Throwable $e) {
-                            Log::error('Failed to save parsed SensorMessage', ['err' => $e->getMessage()]);
+                            Log::error('Error querying Device', ['err' => $e->getMessage(), 'device_id' => $payload['device_id']]);
                         }
 
-                        // fire event (catch errors)
+                        $sensorRecord = [
+                            'device_id' => $payload['device_id'],
+                            'ts' => $payload['ts'] ?? now()->toIso8601String(),
+                            'seq' => $payload['seq'] ?? null,
+                            'sensors' => $payload['sensors'] ?? [],
+                            'engine_room_id' => $engineRoomId,
+                            'raw' => $payload,
+                        ];
+
+                        // persist parsed version
                         try {
-                            event(new SensorDataReceived($payload));
+                            SensorMessage::create($sensorRecord);
+                        } catch (\Throwable $e) {
+                            Log::error('Failed to save parsed SensorMessage', ['err' => $e->getMessage(), 'payload' => $sensorRecord]);
+                        }
+
+                        // fire event (include engine_room_id)
+                        try {
+                            $payloadForEvent = $payload;
+                            $payloadForEvent['engine_room_id'] = $engineRoomId;
+                            $payloadForEvent['ts'] = $sensorRecord['ts'];
+                            event(new SensorDataReceived($payloadForEvent));
                         } catch (\Throwable $e) {
                             Log::error('Failed to broadcast SensorDataReceived', ['err' => $e->getMessage()]);
                         }
                     } catch (\Throwable $e) {
-                        Log::error('Error inside subscribe callback', ['err'=>$e->getMessage()]);
+                        Log::error('Error inside subscribe callback', ['err' => $e->getMessage()]);
                     }
                 });
 
                 // subscribe returned or ended: break to retry outer loop if needed
                 Log::warning('Redis subscribe returned (clean exit). Will reconnect in 3s.');
             } catch (\Throwable $ex) {
-                $this->error('Subscriber exception: '.$ex->getMessage());
+                $this->error('Subscriber exception: ' . $ex->getMessage());
                 Log::error('Subscriber exception', ['err' => $ex->getMessage()]);
             }
 
