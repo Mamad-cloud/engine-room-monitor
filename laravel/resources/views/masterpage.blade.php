@@ -55,6 +55,11 @@
                             <a href="{{ route('subscriptions.index') }}">اشتراکها</a>
                         </div>
 
+                        <div class="sidebar-item-container sidebar-link-active">
+                            <i class="bi bi-lightning fs-4 me-2"></i>
+                            <a href="{{ route('engine-rooms.index') }}">موتورخانه ها</a>
+                        </div>
+
                         <div class="sidebar-item-container">
                             <i class="bi bi-graph-up fs-4 me-2"></i>
                             <a href="{{ route('liveMonitoring') }}">مانیتورینگ زنده</a>
