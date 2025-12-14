@@ -5,6 +5,8 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\EngineRoomController;
+use App\Http\Controllers\AdminConfigController;
+
 
 Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
 
@@ -53,3 +55,12 @@ Route::get('/setting', function () {
 Route::get('/users', [UserController::class, 'index'])->name('users');
 Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
 Route::get('/engine-rooms', [EngineRoomController::class, 'index'])->name('engine-rooms.index');
+
+
+
+Route::get('/event-types', [AdminConfigController::class, 'eventTypes'])
+    ->name('event-types');
+    
+Route::get('/peripheral-modes', [AdminConfigController::class, 'peripheralModes'])
+    ->name('peripheral-modes');
+    
