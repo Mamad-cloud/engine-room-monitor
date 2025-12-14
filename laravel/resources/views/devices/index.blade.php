@@ -279,7 +279,7 @@
         // subscribe to engine-room channel if present
         if (ENGINE_ROOM_ID) {
           const er = pusher.subscribe('engine-room.' + ENGINE_ROOM_ID);
-          er.bind('sensor-data', payload => {
+          er.bind('peripheral-state', payload => {
             try {
               // payload should contain device_id
               updateCard(payload.device_id, payload);
@@ -299,7 +299,7 @@
           const id = card.id.replace('card-', '');
           const ch = pusher.subscribe('device.' + id);
 
-          ch.bind('sensor-data', payload => {
+          ch.bind('peripheral-state', payload => {
             try {
               updateCard(id, payload);
               addMessageRow(payload);
