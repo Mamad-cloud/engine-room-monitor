@@ -38,7 +38,7 @@ class SubscribeToMcu extends Command
                     try {
                         Log::info('mcu.data received', ['channel' => $channel, 'message' => $message]);
                         echo "[mcu.subscribe] {$channel} => {$message}\n";
-
+                        // TODO: don't need to json_decode the message as it would be just a buffer of bytes from now on 
                         $payload = json_decode($message, true);
                         if (!is_array($payload) || empty($payload['device_id']) || empty($payload['event_id'])) {
                             Log::warning('Invalid mcu.data payload (missing device_id or event_id)', ['raw' => $message]);
